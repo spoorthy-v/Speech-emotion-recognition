@@ -1,0 +1,24 @@
+# Dataset
+data/raw/
+data/processed/
+
+# Generated metadata
+data/metadata/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Model checkpoints
+checkpoints/
