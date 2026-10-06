@@ -1,13 +1,21 @@
 import csv
+import random
 from pathlib import Path
 
+import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import f1_score
 from torch.optim import Adam
 
 from src.datasets.dataloader import create_dataloaders
-from src.models.cnn import CNNBaseline
+from src.models.cnn_bilstm import CNNBiLSTM
+
+
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
@@ -125,37 +133,42 @@ def save_training_history(history, output_path):
 
 
 def main():
-    # Configuration
+    # Reproducibility
+    set_seed(42)
+
     metadata_path = "data/metadata/ravdess_splits.csv"
 
     batch_size = 16
     learning_rate = 0.001
     num_epochs = 30
 
-    # Output paths
     results_dir = Path("results")
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    history_path = results_dir / "training_history.csv"
-    checkpoint_path = results_dir / "best_cnn_baseline.pt"
+    history_path = results_dir / "training_history_cnn_bilstm.csv"
+    checkpoint_path = results_dir / "best_cnn_bilstm.pt"
 
-    # CPU for Intel Mac
     device = torch.device("cpu")
 
     print("Using device:", device)
+    print("Model: CNN-BiLSTM")
+    print("Random seed: 42")
 
-    # Data
     train_loader, val_loader, test_loader = create_dataloaders(
         metadata_path=metadata_path,
         batch_size=batch_size,
         num_workers=0,
     )
 
-    # Model
-    model = CNNBaseline(num_classes=8)
+    model = CNNBiLSTM(
+        num_classes=8,
+        hidden_size=128,
+        num_layers=1,
+        dropout=0.3,
+    )
+
     model = model.to(device)
 
-    # Loss and optimizer
     criterion = nn.CrossEntropyLoss()
 
     optimizer = Adam(
@@ -163,13 +176,9 @@ def main():
         lr=learning_rate,
     )
 
-    # Training history
     history = []
-
-    # Best validation Macro-F1
     best_macro_f1 = -1.0
 
-    # Training
     for epoch in range(num_epochs):
 
         train_loss, train_accuracy = train_one_epoch(
@@ -192,7 +201,6 @@ def main():
             device,
         )
 
-        # Save metrics
         epoch_results = {
             "epoch": epoch + 1,
             "train_loss": train_loss,
@@ -205,7 +213,6 @@ def main():
 
         history.append(epoch_results)
 
-        # Print results
         print(
             f"Epoch [{epoch + 1}/{num_epochs}] "
             f"Train Loss: {train_loss:.4f} "
@@ -216,7 +223,6 @@ def main():
             f"Val Weighted-F1: {val_weighted_f1:.4f}"
         )
 
-        # Save best model based on validation Macro-F1
         if val_macro_f1 > best_macro_f1:
 
             best_macro_f1 = val_macro_f1
@@ -239,7 +245,6 @@ def main():
                 f"(Val Macro-F1: {val_macro_f1:.4f})"
             )
 
-    # Save complete training history
     save_training_history(
         history,
         history_path,

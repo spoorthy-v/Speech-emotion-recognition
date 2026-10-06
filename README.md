@@ -319,6 +319,40 @@ CNN Baseline
 
 ---
 
+## Experimental Results
+
+The initial experiments use the RAVDESS dataset with a speaker-independent
+16/4/4 actor split and the same Log-Mel preprocessing configuration.
+
+| Experiment | Representation | Model | Test Accuracy | Test Macro-F1 | Test Weighted-F1 |
+|------------|----------------|-------|---------------|---------------|------------------|
+| 1 | Log-Mel Spectrogram | CNN | 44.17% | 41.28% | 41.64% |
+| 2 | Log-Mel Spectrogram | CNN-BiLSTM | **51.67%** | **51.09%** | **51.48%** |
+
+### Experiment 2: CNN-BiLSTM
+
+The CNN-BiLSTM extends the CNN baseline with bidirectional temporal
+modeling. The CNN extracts local time-frequency features from the
+Log-Mel spectrogram, while the BiLSTM models temporal dependencies
+across the extracted feature sequence.
+
+The best checkpoint was selected using validation Macro-F1.
+
+- Best checkpoint: Epoch 22
+- Validation Macro-F1: 50.67%
+- Test Accuracy: 51.67%
+- Test Macro-F1: 51.09%
+- Test Weighted-F1: 51.48%
+
+Compared with the CNN baseline, the CNN-BiLSTM improved test Macro-F1
+from 41.28% to 51.09%, an absolute improvement of 9.81 percentage
+points.
+
+The same dataset split, preprocessing pipeline, and evaluation protocol
+were retained to make the comparison between the two architectures
+controlled and reproducible.
+
+
 ## Future Datasets
 
 Following the initial RAVDESS benchmark, the framework is intended to support additional datasets such as:
@@ -347,6 +381,8 @@ Potential research directions include:
 * Robustness to recording conditions and domains
 
 ---
+
+
 
 ## License
 
